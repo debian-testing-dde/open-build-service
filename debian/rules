@@ -1,0 +1,77 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/default.mk
+
+export LANG := C.UTF-8
+export LC_ALL := C.UTF-8
+export RUBYOPT := -EUTF-8:UTF-8
+
+OBS_BACKEND_PREFIX := /usr/lib/obs/server
+OBS_BACKEND_DATA_DIR := /srv/obs
+OBS_DOCUMENT_ROOT := /srv/www/obs
+OBS_API_PREFIX := $(OBS_DOCUMENT_ROOT)/api
+OBS_APIDOCS_PREFIX := $(OBS_DOCUMENT_ROOT)/docs
+APACHE_USER := www-data
+APACHE_GROUP := www-data
+APACHE_CONFDIR := /etc/apache2
+APACHE_VHOSTDIR := $(APACHE_CONFDIR)/sites-available
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	printf '%s\n' \
+		'INSTALL=/usr/bin/install' \
+		'OBS_BACKEND_PREFIX=$(OBS_BACKEND_PREFIX)' \
+		'OBS_BACKEND_DATA_DIR=$(OBS_BACKEND_DATA_DIR)' \
+		'OBS_DOCUMENT_ROOT=$(OBS_DOCUMENT_ROOT)' \
+		'OBS_API_PREFIX=$(OBS_API_PREFIX)' \
+		'OBS_APIDOCS_PREFIX=$(OBS_APIDOCS_PREFIX)' \
+		'APACHE_USER=$(APACHE_USER)' \
+		'APACHE_GROUP=$(APACHE_GROUP)' \
+		'APACHE_CONFDIR=$(APACHE_CONFDIR)' \
+		'APACHE_CONFDIR_VHOST=$(APACHE_VHOSTDIR)' \
+		'APACHE_VHOST_CONF=obs-apache24.conf' \
+		'APACHE_LOGDIR=/var/log/apache2' \
+		'OBS_RUBY_BIN=/usr/bin/ruby3.4' \
+		'OBS_BUNDLE_BIN=/usr/bin/ruby3.4 -S bundle' \
+		'OBS_RAKE_BIN=/usr/bin/rake' \
+		'OBS_RUBY_ABI_VERSION=3.4.0' \
+		> Makefile.local
+	install -d src/api/.bundle
+	printf '%s\n' \
+		'---' \
+		'BUNDLE_FROZEN: "true"' \
+		'BUNDLE_PATH: "/usr/lib/obs-api"' \
+		'BUNDLE_WITHOUT: "development:test"' \
+		> src/api/.bundle/config
+	rm -rf src/api/docker-files src/backend/build
+	find . \( -name .keep -o -name .gitignore \) -delete
+	cd dist && /usr/bin/ruby3.4 ./resolve_swagger_yaml.rb \
+		-i ../src/api/public/apidocs/OBS-v2.10.50.yaml \
+		-o ../src/api/public/apidocs/OBS-v2.10.50.yaml \
+		-f
+
+override_dh_auto_test:
+	:
+
+override_dh_auto_install:
+	DESTDIR=$(CURDIR)/debian/tmp OBS_VERSION=$(DEB_VERSION_UPSTREAM) make install
+	install -D -m 0644 dist/sysconfig.obs-server $(CURDIR)/debian/tmp/etc/default/obs-server
+	install -d $(CURDIR)/debian/tmp/usr/share/perl5/OBS
+	cp src/backend/BSXML.pm $(CURDIR)/debian/tmp/usr/share/perl5/OBS/XML.pm
+	sed -i -e 's,package BSXML;,package OBS::XML;,' $(CURDIR)/debian/tmp/usr/share/perl5/OBS/XML.pm
+	sed -i -e 's,[ ]*adapter: mysql$$,  adapter: mysql2,' $(CURDIR)/debian/tmp$(OBS_API_PREFIX)/config/database.yml
+	sed -i -e 's,[ ]*username: root$$,  username: obsapi,' $(CURDIR)/debian/tmp$(OBS_API_PREFIX)/config/database.yml
+	sed -i -e 's,[ ]*username: root$$,  username: obsapi,' $(CURDIR)/debian/tmp$(OBS_API_PREFIX)/config/database.yml.example
+	: > $(CURDIR)/debian/tmp$(OBS_API_PREFIX)/last_deploy
+
+override_dh_installsystemd:
+	dh_installsystemd --no-enable --no-start
+
+override_dh_auto_clean:
+	rm -f Makefile.local
+	rm -f src/api/.bundle/config
+	rmdir --ignore-fail-on-non-empty src/api/.bundle || true
+	rm -f src/api/config/database.yml src/api/config/options.yml src/api/config/thinking_sphinx.yml
+	dh_auto_clean

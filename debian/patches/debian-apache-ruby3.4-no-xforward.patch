@@ -1,0 +1,37 @@
+Description: adapt the Apache vhost to Debian testing runtime defaults
+Author: hao <hao@local>
+Forwarded: not-needed
+Last-Update: 2026-03-15
+
+--- a/dist/obs-apache24.conf
++++ b/dist/obs-apache24.conf
+@@ -6,6 +6,7 @@
+ # Passenger defaults
+ PassengerSpawnMethod "smart"
+ PassengerMaxPoolSize 20
++PassengerRuby /usr/bin/ruby3.4
+ #RailsEnv "development"
+ 
+ # allow long request urls and being part of headers
+@@ -61,8 +62,7 @@
+         </IfDefine>
+ 
+         PassengerMinInstances 2
+-        PassengerPreStart https://api
+-
++        SetEnv HOME @@OBS_API_PREFIX@@/tmp/home
+ 	SSLEngine on
+ 
+ 	#  SSL protocols
+@@ -83,11 +84,6 @@
+            AllowOverride all
+            Options -MultiViews
+ 
+-           # This requires mod_xforward loaded in apache 
+-           # Enable the usage via options.yml
+-           # This will decrease the load due to long running requests a lot (unloading from rails stack)
+-           XForward on
+-
+            Require all granted
+         </Directory>
+ 

@@ -1,0 +1,17 @@
+debian/tmp/etc/apache2/sites-available/obs.conf etc/apache2/sites-available/
+debian/tmp/etc/logrotate.d/obs-api etc/logrotate.d/
+debian/tmp/srv/www/obs srv/www/
+debian/tmp/usr/lib/systemd/system/obs-api-support.target usr/lib/systemd/system/
+debian/tmp/usr/lib/systemd/system/obs-clockwork.service usr/lib/systemd/system/
+debian/tmp/usr/lib/systemd/system/obs-delayedjob-queue-consistency_check.service usr/lib/systemd/system/
+debian/tmp/usr/lib/systemd/system/obs-delayedjob-queue-default.service usr/lib/systemd/system/
+debian/tmp/usr/lib/systemd/system/obs-delayedjob-queue-issuetracking.service usr/lib/systemd/system/
+debian/tmp/usr/lib/systemd/system/obs-delayedjob-queue-mailers.service usr/lib/systemd/system/
+debian/tmp/usr/lib/systemd/system/obs-delayedjob-queue-project_log_rotate.service usr/lib/systemd/system/
+debian/tmp/usr/lib/systemd/system/obs-delayedjob-queue-quick@.service usr/lib/systemd/system/
+debian/tmp/usr/lib/systemd/system/obs-delayedjob-queue-releasetracking.service usr/lib/systemd/system/
+debian/tmp/usr/lib/systemd/system/obs-delayedjob-queue-scm.service usr/lib/systemd/system/
+debian/tmp/usr/lib/systemd/system/obs-delayedjob-queue-staging.service usr/lib/systemd/system/
+debian/tmp/usr/lib/systemd/system/obs-sphinx.service usr/lib/systemd/system/
+debian/obs-debian-apisetup.sh usr/lib/obs/server/
+debian/obsapisetup.service usr/lib/systemd/system/

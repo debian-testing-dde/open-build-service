@@ -1,0 +1,2 @@
+debian/tmp/usr/lib/systemd/system/obsworker.service usr/lib/systemd/system/
+debian/tmp/usr/sbin/obsworker usr/sbin/

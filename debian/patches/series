@@ -1,0 +1,3 @@
+debian-apache-ruby3.4-no-xforward.patch
+debian-api-bin-ruby3.4-shebang.patch
+debian-default-obs-config.patch

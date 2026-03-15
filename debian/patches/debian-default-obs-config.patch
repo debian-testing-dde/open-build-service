@@ -1,0 +1,332 @@
+Description: use Debian default config path and bash-compatible obsstoragesetup
+Author: hao <hao@local>
+Forwarded: not-needed
+Last-Update: 2026-03-15
+
+--- a/dist/obsstoragesetup
++++ b/dist/obsstoragesetup
+@@ -1,11 +1,17 @@
+-#! /bin/sh
++#! /bin/bash
+ # Copyright (c) 2010-12, SUSE Inc.
+ #
+ # Author: adrian@suse.de
+ #
+ # /etc/init.d/obsstoragesetup
+ 
+-source /etc/sysconfig/obs-server
++OBS_CONFIG_FILE=/etc/default/obs-server
++if [ -e "$OBS_CONFIG_FILE" ]; then
++  source "$OBS_CONFIG_FILE"
++elif [ -e /etc/sysconfig/obs-server ]; then
++  OBS_CONFIG_FILE=/etc/sysconfig/obs-server
++  source "$OBS_CONFIG_FILE"
++fi
+ source /usr/lib/obs/server/functions.setup-appliance.sh
+ 
+ # instance defaults
+@@ -14,7 +20,7 @@
+ fi
+ 
+ if [ "$OBS_STORAGE_AUTOSETUP" != "yes" ]; then
+-   echo "OBS Storage Autosetup is not enabled in sysconfig, skipping!"
++   echo "OBS Storage Autosetup is not enabled in ${OBS_CONFIG_FILE}, skipping!"
+    exit 0
+ fi
+ 
+--- a/dist/obsscheduler
++++ b/dist/obsscheduler
+@@ -3,7 +3,13 @@
+ #
+ # Author: adrian@suse.de
+ 
+-. /etc/sysconfig/obs-server
++OBS_CONFIG_FILE=/etc/default/obs-server
++if test -e "$OBS_CONFIG_FILE"; then
++    . "$OBS_CONFIG_FILE"
++elif test -e /etc/sysconfig/obs-server; then
++    OBS_CONFIG_FILE=/etc/sysconfig/obs-server
++    . "$OBS_CONFIG_FILE"
++fi
+ 
+ # Determine the base and follow a runlevel link name.
+ base=${0##*/}
+@@ -29,7 +35,7 @@
+ 
+ if test -n "$OBS_NEW_SCHEDULER_ARCHITECTURES" ; then
+ 	if test -n "$OBS_SCHEDULER_ARCHITECTURES" ; then
+-		echo "WARNING: ignoring old scheduler architectures configuration from /etc/sysconfig/obs-server"
++		echo "WARNING: ignoring old scheduler architectures configuration from $OBS_CONFIG_FILE"
+ 	fi
+ 	OBS_SCHEDULER_ARCHITECTURES="$OBS_NEW_SCHEDULER_ARCHITECTURES"
+ fi
+--- a/dist/obsworker
++++ b/dist/obsworker
+@@ -20,9 +20,14 @@
+     export NO_PROXY
+   fi
+ fi
+-if test -e /etc/sysconfig/obs-server; then
++OBS_CONFIG_FILE=/etc/default/obs-server
++if test -e "$OBS_CONFIG_FILE"; then
+     # optional on workers
+-    . /etc/sysconfig/obs-server
++    . "$OBS_CONFIG_FILE"
++elif test -e /etc/sysconfig/obs-server; then
++    OBS_CONFIG_FILE=/etc/sysconfig/obs-server
++    # compatibility fallback
++    . "$OBS_CONFIG_FILE"
+ fi
+ # This file may still exist from OBS 2.1 and before.
+ if test -e /etc/sysconfig/obs-worker; then
+@@ -199,12 +204,12 @@
+ 
+ if [ "$OBS_VM_TYPE" = "openstack" ]; then
+     if [ -z "$OBS_WORKER_CONTROL_INSTANCE" ];then
+-        echo "Please specify OBS_WORKER_CONTROL_INSTANCE in /etc/sysconfig/obs-server!"
++        echo "Please specify OBS_WORKER_CONTROL_INSTANCE in $OBS_CONFIG_FILE!"
+         exit 1
+     fi
+ 
+     if [ -z "$OBS_WORKER_OS_FLAVOR" ];then
+-        echo "Please specify OBS_WORKER_OS_FLAVOR in /etc/sysconfig/obs-server!"
++        echo "Please specify OBS_WORKER_OS_FLAVOR in $OBS_CONFIG_FILE!"
+         exit 1
+     fi
+ 
+@@ -310,7 +315,7 @@
+     # 0150 is already included from the local guest
+     ZVM_VOLUME_SWAP=${ZVM_VOLUME_SWAP:-0200}
+     if test -z "$2" ; then
+-        echo "Please define a name for the new initrd in /etc/sysconfig/obs-server"
++        echo "Please define a name for the new initrd in $OBS_CONFIG_FILE"
+         return 1
+     else
+         # create initrd with system scripts
+--- a/dist/setup-appliance.sh
++++ b/dist/setup-appliance.sh
+@@ -20,16 +20,19 @@
+ PID_FILE=/run/setup-appliance.pid
+ 
+ # package or appliance defaults
+-if [ -e /etc/sysconfig/obs-server ]; then
+-  source /etc/sysconfig/obs-server
++OBS_CONFIG_FILE=/etc/default/obs-server
++if [ -e "$OBS_CONFIG_FILE" ]; then
++  source "$OBS_CONFIG_FILE"
++elif [ -e /etc/sysconfig/obs-server ]; then
++  OBS_CONFIG_FILE=/etc/sysconfig/obs-server
++  source "$OBS_CONFIG_FILE"
+ fi
+ 
+ # Set default directories
+ apidir=/srv/www/obs/api
+ backenddir=/srv/obs
+ 
+-# Overwrite directory defaults with settings in
+-# config file /etc/sysconfig/obs-server
++# Overwrite directory defaults with settings in the OBS config file
+ if [ -n "$OBS_BASE_DIR" ]; then
+   backenddir="$OBS_BASE_DIR"
+ fi
+@@ -65,7 +68,7 @@
+ done
+ 
+ if [ "$OBS_API_AUTOSETUP" != "yes" ]; then
+-  echo "OBS API Autosetup is not enabled in sysconfig, skipping!"
++  echo "OBS API Autosetup is not enabled in ${OBS_CONFIG_FILE}, skipping!"
+   exit 0
+ fi
+ 
+--- a/dist/systemd/obsdeltastore.service
++++ b/dist/systemd/obsdeltastore.service
+@@ -3,7 +3,8 @@
+ After=network-online.target obsstoragesetup.service
+ 
+ [Service]
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_deltastore --logfile deltastore.log
+ ExecStop=/usr/lib/obs/server/bs_deltastore --stop
+ ExecReload=/usr/lib/obs/server/bs_deltastore --restart
+--- a/dist/systemd/obsdispatcher.service
++++ b/dist/systemd/obsdispatcher.service
+@@ -5,7 +5,8 @@
+ 
+ [Service]
+ OOMPolicy=continue
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_dispatch --logfile dispatcher.log
+ ExecStop=/usr/lib/obs/server/bs_dispatch --stop
+ ExecReload=/usr/lib/obs/server/bs_dispatch --restart
+--- a/dist/systemd/obsdodup.service
++++ b/dist/systemd/obsdodup.service
+@@ -5,7 +5,8 @@
+ 
+ [Service]
+ OOMPolicy=continue
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_dodup --logfile dodup.log
+ ExecStop=/usr/lib/obs/server/bs_dodup --stop
+ ExecReload=/usr/lib/obs/server/bs_dodup --restart
+--- a/dist/systemd/obsgetbinariesproxy.service
++++ b/dist/systemd/obsgetbinariesproxy.service
+@@ -5,7 +5,8 @@
+ [Service]
+ OOMPolicy=continue
+ LimitNOFILE=16384
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_getbinariesproxy --logfile getbinariesproxy.log
+ ExecStop=/usr/lib/obs/server/bs_getbinariesproxy --stop
+ ExecReload=/usr/lib/obs/server/bs_getbinariesproxy --restart
+--- a/dist/systemd/obsnotifyforward.service
++++ b/dist/systemd/obsnotifyforward.service
+@@ -3,7 +3,8 @@
+ After=network-online.target
+ 
+ [Service]
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_notifyforward --logfile notifyforward.log
+ ExecStop=/usr/lib/obs/server/bs_notifyforward --stop
+ ExecReload=/usr/lib/obs/server/bs_notifyforward --restart
+--- a/dist/systemd/obspublisher.service
++++ b/dist/systemd/obspublisher.service
+@@ -4,7 +4,8 @@
+ 
+ [Service]
+ OOMPolicy=continue
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_publish --logfile publisher.log
+ ExecStop=/usr/lib/obs/server/bs_publish --stop
+ ExecReload=/usr/lib/obs/server/bs_publish --restart
+--- a/dist/systemd/obsredis.service
++++ b/dist/systemd/obsredis.service
+@@ -3,7 +3,8 @@
+ After=network-online.target
+ 
+ [Service]
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_redis --logfile redis.log
+ ExecStop=/usr/lib/obs/server/bs_redis --stop
+ ExecReload=/usr/lib/obs/server/bs_redis --restart
+--- a/dist/systemd/obsrepserver.service
++++ b/dist/systemd/obsrepserver.service
+@@ -4,7 +4,8 @@
+ 
+ [Service]
+ OOMPolicy=continue
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_repserver --logfile rep_server.log
+ ExecStop=/usr/lib/obs/server/bs_repserver --stop
+ ExecReload=/usr/lib/obs/server/bs_repserver --restart
+--- a/dist/systemd/obsscheduler@.service
++++ b/dist/systemd/obsscheduler@.service
+@@ -4,7 +4,8 @@
+ 
+ [Service]
+ OOMPolicy=continue
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_sched %i
+ ExecStop=/usr/lib/obs/server/bs_admin --shutdown-scheduler %i
+ 
+--- a/dist/systemd/obsservice.service
++++ b/dist/systemd/obsservice.service
+@@ -4,7 +4,8 @@
+ 
+ [Service]
+ OOMPolicy=continue
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_service --logfile src_service.log
+ ExecStop=/usr/lib/obs/server/bs_service --stop
+ ExecReload=/usr/lib/obs/server/bs_service --restart
+--- a/dist/systemd/obsservicedispatch.service
++++ b/dist/systemd/obsservicedispatch.service
+@@ -4,7 +4,8 @@
+ 
+ [Service]
+ OOMPolicy=continue
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_servicedispatch --logfile servicedispatch.log
+ ExecStop=/usr/lib/obs/server/bs_servicedispatch --stop
+ ExecReload=/usr/lib/obs/server/bs_servicedispatch --restart
+--- a/dist/systemd/obssigner.service
++++ b/dist/systemd/obssigner.service
+@@ -4,7 +4,8 @@
+ 
+ [Service]
+ OOMPolicy=continue
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_signer --logfile signer.log
+ ExecStop=/usr/lib/obs/server/bs_signer --stop
+ ExecReload=/usr/lib/obs/server/bs_signer --restart
+--- a/dist/systemd/obssourcepublish.service
++++ b/dist/systemd/obssourcepublish.service
+@@ -4,7 +4,8 @@
+ 
+ [Service]
+ OOMPolicy=continue
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_sourcepublish --logfile sourcepublish.log
+ ExecStop=/usr/lib/obs/server/bs_sourcepublish --stop
+ ExecReload=/usr/lib/obs/server/bs_sourcepublish --restart
+--- a/dist/systemd/obssrcserver.service
++++ b/dist/systemd/obssrcserver.service
+@@ -4,7 +4,8 @@
+ 
+ [Service]
+ OOMPolicy=continue
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_srcserver --logfile src_server.log
+ ExecStop=/usr/lib/obs/server/bs_srcserver --stop
+ ExecReload=/usr/lib/obs/server/bs_srcserver --restart
+--- a/dist/systemd/obswarden.service
++++ b/dist/systemd/obswarden.service
+@@ -3,7 +3,8 @@
+ After=network-online.target
+ 
+ [Service]
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStart=/usr/lib/obs/server/bs_warden --logfile warden.log
+ ExecStop=/usr/lib/obs/server/bs_warden --stop
+ ExecReload=/usr/lib/obs/server/bs_warden --restart
+--- a/dist/systemd/obsworker@.service
++++ b/dist/systemd/obsworker@.service
+@@ -4,7 +4,8 @@
+          
+ [Service]
+ OOMPolicy=continue
+-EnvironmentFile=/etc/sysconfig/obs-server
++EnvironmentFile=-/etc/default/obs-server
++EnvironmentFile=-/etc/sysconfig/obs-server
+ ExecStartPre=/bin/sh -c "/bin/systemctl set-environment HOSTNAME=`hostname`"
+ ExecStartPre=/bin/mkdir -p /var/cache/build/root_%i
+ ExecStartPre=/bin/mkdir -p /var/cache/build/state_%i

@@ -1,0 +1,109 @@
+Source: obs-server
+Section: devel
+Priority: optional
+Maintainer: hao <hao@local>
+Build-Depends: debhelper-compat (= 13),
+ nodejs,
+ obs-bundled-gems (>= 0~git20260313.eec7f37),
+ rake,
+ ruby-bundler,
+ ruby-hana,
+ ruby-json-refs,
+ ruby3.4,
+ tzdata
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://openbuildservice.org/
+
+Package: obs-common
+Architecture: all
+Depends: adduser,
+ ${misc:Depends}
+Description: base configuration and runtime state directories for OBS
+ This package provides shared configuration and storage directories for the
+ Open Build Service on Debian testing.
+
+Package: obs-server
+Architecture: all
+Depends: obs-common (= ${binary:Version}),
+ obs-build (>= 20210120-4obs3),
+ libobs-xml-perl (= ${binary:Version}),
+ createrepo-c (>= 0.20),
+ diffutils,
+ git,
+ patch,
+ libcompress-raw-zlib-perl,
+ libdbd-sqlite3-perl,
+ libfile-sync-perl,
+ libjson-xs-perl,
+ libnet-ssleay-perl,
+ libbssolv-perl,
+ libsocket-msghdr-perl,
+ libtimedate-perl,
+ liburi-perl,
+ libxml-parser-perl,
+ libxml-simple-perl,
+ libxml-structured-perl,
+ libyaml-libyaml-perl,
+ zstd,
+ ${misc:Depends}
+Recommends: cron,
+ dpkg,
+ logrotate,
+ reprepro,
+ zsync
+Description: backend services for the Open Build Service
+ This package contains the backend daemons and service helpers used by the
+ Open Build Service on Debian testing.
+
+Package: obs-worker
+Architecture: all
+Depends: obs-common (= ${binary:Version}),
+ obs-build (>= 20210120-4obs1),
+ bash,
+ binutils,
+ cpio,
+ curl,
+ libcompress-raw-zlib-perl,
+ libtimedate-perl,
+ libxml-parser-perl,
+ screen,
+ util-linux,
+ ${misc:Depends}
+Recommends: lvm2
+Description: worker service for the Open Build Service
+ This package provides the worker wrapper used to manage OBS build hosts on
+ Debian testing.
+
+Package: obs-api
+Architecture: all
+Depends: obs-common (= ${binary:Version}),
+ apache2,
+ libapache2-mod-passenger,
+ obs-api-deps (>= 0~git20260313.eec7f37),
+ obs-bundled-gems (>= 0~git20260313.eec7f37),
+ openssl,
+ passenger,
+ procps,
+ ruby3.4,
+ tzdata,
+ ${misc:Depends}
+Description: API and web UI for the Open Build Service
+ This package contains the Rails application, assets, Apache vhost, and
+ background job units for the OBS API and web UI on Debian testing.
+
+Package: obs-utils
+Architecture: all
+Depends: obs-build (>= 20210120-4obs1),
+ osc,
+ ${misc:Depends}
+Description: utility helpers for the Open Build Service
+ This package provides administrative helper scripts for moving package data
+ between OBS instances.
+
+Package: libobs-xml-perl
+Architecture: all
+Depends: ${misc:Depends},
+ ${perl:Depends}
+Description: OBS XML helper module for Perl
+ This package provides the OBS::XML Perl module used by backend tooling.

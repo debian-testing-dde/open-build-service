@@ -1,0 +1,93 @@
+Description: rewrite src/api/bin shebangs to Debian ruby3.4 path
+Author: hao <hao@local>
+Forwarded: not-needed
+Last-Update: 2026-03-15
+
+--- a/src/api/bin/bundle
++++ b/src/api/bin/bundle
+@@ -1,4 +1,4 @@
+-#!/usr/bin/ruby.ruby3.4
++#!/usr/bin/ruby3.4
+ # frozen_string_literal: true
+ 
+ #
+--- a/src/api/bin/clockwork
++++ b/src/api/bin/clockwork
+@@ -1,4 +1,4 @@
+-#!/usr/bin/ruby.ruby3.4
++#!/usr/bin/ruby3.4
+ # frozen_string_literal: true
+ 
+ #
+--- a/src/api/bin/clockworkd
++++ b/src/api/bin/clockworkd
+@@ -1,4 +1,4 @@
+-#!/usr/bin/ruby.ruby3.4
++#!/usr/bin/ruby3.4
+ # frozen_string_literal: true
+ 
+ #
+--- a/src/api/bin/pry
++++ b/src/api/bin/pry
+@@ -1,4 +1,4 @@
+-#!/usr/bin/ruby.ruby3.4
++#!/usr/bin/ruby3.4
+ # frozen_string_literal: true
+ 
+ #
+--- a/src/api/bin/rails
++++ b/src/api/bin/rails
+@@ -1,4 +1,4 @@
+-#!/usr/bin/ruby.ruby3.4
++#!/usr/bin/ruby3.4
+ APP_PATH = File.expand_path('../config/application', __dir__)
+ require_relative '../config/boot'
+ require 'rails/commands'
+--- a/src/api/bin/rake
++++ b/src/api/bin/rake
+@@ -1,4 +1,4 @@
+-#!/usr/bin/ruby.ruby3.4
++#!/usr/bin/ruby3.4
+ require_relative "../config/boot"
+ require "rake"
+ Rake.application.run
+--- a/src/api/bin/rdoc
++++ b/src/api/bin/rdoc
+@@ -1,4 +1,4 @@
+-#!/usr/bin/ruby.ruby3.4
++#!/usr/bin/ruby3.4
+ # frozen_string_literal: true
+ 
+ #
+--- a/src/api/bin/ri
++++ b/src/api/bin/ri
+@@ -1,4 +1,4 @@
+-#!/usr/bin/ruby.ruby3.4
++#!/usr/bin/ruby3.4
+ # frozen_string_literal: true
+ 
+ #
+--- a/src/api/bin/rspec
++++ b/src/api/bin/rspec
+@@ -1,4 +1,4 @@
+-#!/usr/bin/ruby.ruby3.4
++#!/usr/bin/ruby3.4
+ # frozen_string_literal: true
+ 
+ #
+--- a/src/api/bin/rubocop
++++ b/src/api/bin/rubocop
+@@ -1,4 +1,4 @@
+-#!/usr/bin/ruby.ruby3.4
++#!/usr/bin/ruby3.4
+ # frozen_string_literal: true
+ 
+ #
+--- a/src/api/bin/setup
++++ b/src/api/bin/setup
+@@ -1,4 +1,4 @@
+-#!/usr/bin/ruby.ruby3.4
++#!/usr/bin/ruby3.4
+ require "fileutils"
+ 
+ # path to your application root.
