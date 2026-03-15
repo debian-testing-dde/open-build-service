@@ -1,0 +1,59 @@
+obs-server (0~git20260313.eec7f37-1obs14) unstable; urgency=medium
+
+  * Enable the OBS Apache vhost and required modules during obs-api install.
+  * Generate a local self-signed API certificate when no OBS certificate is
+    present yet.
+  * Run the Passenger app as www-data by handing the API app root to the
+    Apache runtime user.
+  * Bootstrap a dedicated obsapi MariaDB user and switch database.yml away
+    from the root account for Debian testing runtime.
+  * Drop the PassengerPreStart-in-vhost warning and set a writable HOME for
+    Passenger app processes.
+
+ -- hao <hao@local>  Sun, 15 Mar 2026 22:10:00 +0800
+
+obs-server (0~git20260313.eec7f37-1obs13) unstable; urgency=medium
+
+  * Add a noninteractive obs-common conffile migration for
+    /etc/default/obs-server so upgrades from earlier local Debian testing
+    builds do not stop at a dpkg prompt.
+
+ -- hao <hao@local>  Sun, 15 Mar 2026 21:20:00 +0800
+
+obs-server (0~git20260313.eec7f37-1obs12) unstable; urgency=medium
+
+  * Install /etc/default/obs-server into obs-common so the Debian default
+    config file is shipped as a real conffile.
+  * Depend on libbssolv-perl instead of libsolv-perl for backend runtime.
+  * Require obs-build 20210120-4obs3 for Build::Apk support used by
+    bs_mkapkrepo.
+
+ -- hao <hao@local>  Sun, 15 Mar 2026 16:45:00 +0800
+
+obs-server (0~git20260313.eec7f37-1obs11) unstable; urgency=medium
+
+  * Initial Debian testing packaging for the OBS server stack.
+  * Build against the project-local Ruby 3.4 and bundled gem packages.
+  * Drop the hard mod_xforward requirement from the Apache vhost template.
+  * Treat Diff::LibXDiff as optional on Debian because the backend loads it
+    via eval.
+  * Drop the libsolv-perl versioned dependency to match Debian package
+    metadata.
+  * Replace the heavy obs-api-testsuite-deps build dependency with the
+    minimal Ruby/Node precompile stack.
+  * Force UTF-8 Ruby defaults during the build and swagger generation.
+  * Rewrite src/api/bin shebangs to /usr/bin/ruby3.4 for Debian testing.
+  * Add tzdata for assets precompile and Rails runtime timezone lookup.
+  * Switch Debian packaging to /etc/default/obs-server and keep
+    /etc/sysconfig/obs-server as a compatibility fallback.
+  * Run obsstoragesetup with bash because the upstream script uses bashisms.
+  * Replace obsapisetup.service with a Debian-native API/database bootstrap
+    helper instead of the SUSE appliance setup script.
+  * Install /etc/default/obs-server as a real config file instead of a
+    directory wrapper.
+  * Regenerate API config/secret.key during install and autosetup when it is
+    missing.
+  * Pull required backend daemons into obsapisetup.service before running
+    writeconfiguration.
+
+ -- hao <hao@local>  Sun, 15 Mar 2026 15:00:00 +0800

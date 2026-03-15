@@ -1,0 +1,83 @@
+#!/bin/sh
+set -e
+
+OBS_DEFAULT=/etc/default/obs-server
+OBS_DEFAULT_BACKUP=/etc/default/obs-server.obs-common-preinst
+
+case "$1" in
+    configure|abort-upgrade|abort-deconfigure|abort-remove)
+        if [ -f "$OBS_DEFAULT_BACKUP" ]; then
+            if [ -f "$OBS_DEFAULT" ] && ! cmp -s "$OBS_DEFAULT" "$OBS_DEFAULT_BACKUP"; then
+                cp -a "$OBS_DEFAULT" "$OBS_DEFAULT.dpkg-dist"
+            fi
+            mv -f "$OBS_DEFAULT_BACKUP" "$OBS_DEFAULT"
+            chown root:root "$OBS_DEFAULT"
+            chmod 0644 "$OBS_DEFAULT"
+        fi
+
+        if ! getent group obsrun >/dev/null; then
+            addgroup --system obsrun
+        fi
+
+        if ! getent passwd obsrun >/dev/null; then
+            adduser --quiet --system --home /usr/lib/obs --no-create-home \
+                --ingroup obsrun --shell /usr/sbin/nologin \
+                --gecos "User for build service backend" obsrun
+        fi
+
+        if ! getent passwd obsservicerun >/dev/null; then
+            adduser --quiet --system --home /srv/obs/service --no-create-home \
+                --ingroup obsrun --shell /usr/sbin/nologin \
+                --gecos "" obsservicerun
+        fi
+
+        mkdir -p \
+            /srv/obs \
+            /srv/obs/MySQL \
+            /srv/obs/build \
+            /srv/obs/certs \
+            /srv/obs/db \
+            /srv/obs/diffcache \
+            /srv/obs/events \
+            /srv/obs/gnupg \
+            /srv/obs/info \
+            /srv/obs/jobs \
+            /srv/obs/log \
+            /srv/obs/projects \
+            /srv/obs/remotecache \
+            /srv/obs/repos \
+            /srv/obs/run \
+            /srv/obs/service \
+            /srv/obs/service/log \
+            /srv/obs/sources \
+            /srv/obs/trees \
+            /srv/obs/upload \
+            /srv/obs/workers
+
+        chown obsrun:obsrun /srv/obs
+        chmod 0775 /srv/obs
+
+        for path in build db diffcache events info jobs projects remotecache repos; do
+            chown obsrun:obsrun "/srv/obs/$path"
+            chmod 0755 "/srv/obs/$path"
+        done
+
+        for path in log run sources trees upload workers; do
+            chown obsrun:obsrun "/srv/obs/$path"
+            chmod 0775 "/srv/obs/$path"
+        done
+
+        chown root:root /srv/obs/certs /srv/obs/gnupg
+        chmod 0700 /srv/obs/certs /srv/obs/gnupg
+
+        chown obsservicerun:obsrun /srv/obs/service /srv/obs/service/log
+        chmod 0755 /srv/obs/service /srv/obs/service/log
+
+        if getent passwd mysql >/dev/null; then
+            chown mysql:mysql /srv/obs/MySQL
+        fi
+        chmod 0755 /srv/obs/MySQL
+        ;;
+esac
+
+exit 0

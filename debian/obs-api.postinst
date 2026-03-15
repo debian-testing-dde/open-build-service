@@ -1,0 +1,113 @@
+#!/bin/sh
+set -e
+
+API_ROOT=/srv/www/obs/api
+OBS_CERT_DIR=/srv/obs/certs
+API_HOME_DIR="$API_ROOT/tmp/home"
+
+ensure_ssl_cert() {
+    [ -d "$OBS_CERT_DIR" ] || install -d -m 0700 "$OBS_CERT_DIR"
+
+    if [ ! -s "$OBS_CERT_DIR/server.key" ]; then
+        openssl genrsa -out "$OBS_CERT_DIR/server.key" 2048 >/dev/null 2>&1
+        chmod 0600 "$OBS_CERT_DIR/server.key"
+    fi
+
+    if [ ! -s "$OBS_CERT_DIR/server.crt" ]; then
+        fqdn=$(hostname -f 2>/dev/null || hostname 2>/dev/null || echo localhost)
+        if ! openssl req -new -x509 \
+            -key "$OBS_CERT_DIR/server.key" \
+            -out "$OBS_CERT_DIR/server.crt" \
+            -days 365 \
+            -subj "/C=XX/ST=OBS/L=OBS/O=Open Build Service/CN=$fqdn" \
+            -addext "subjectAltName=DNS:$fqdn,DNS:api,DNS:localhost,IP:127.0.0.1" \
+            -addext "basicConstraints=critical,CA:FALSE" \
+            -addext "keyUsage=critical,digitalSignature,keyEncipherment" \
+            >/dev/null 2>&1; then
+            openssl req -new -x509 \
+                -key "$OBS_CERT_DIR/server.key" \
+                -out "$OBS_CERT_DIR/server.crt" \
+                -days 365 \
+                -subj "/C=XX/ST=OBS/L=OBS/O=Open Build Service/CN=$fqdn" \
+                >/dev/null 2>&1
+        fi
+        chmod 0644 "$OBS_CERT_DIR/server.crt"
+    fi
+}
+
+enable_obs_apache_site() {
+    if command -v a2enmod >/dev/null 2>&1; then
+        for mod in ssl headers rewrite expires proxy proxy_http socache_shmcb; do
+            a2enmod -q "$mod" >/dev/null 2>&1 || true
+        done
+    fi
+
+    if command -v a2ensite >/dev/null 2>&1; then
+        a2ensite -q obs >/dev/null 2>&1 || true
+    fi
+
+    if command -v a2dissite >/dev/null 2>&1 && [ -L /etc/apache2/sites-enabled/000-default.conf ]; then
+        a2dissite -q 000-default >/dev/null 2>&1 || true
+    fi
+
+    if command -v apache2ctl >/dev/null 2>&1 && apache2ctl -t >/dev/null 2>&1; then
+        invoke-rc.d apache2 reload >/dev/null 2>&1 || true
+    fi
+}
+
+case "$1" in
+    configure|abort-upgrade|abort-deconfigure|abort-remove)
+        mkdir -p \
+            "$API_ROOT/db/sphinx/production" \
+            "$API_ROOT/log" \
+            "$API_ROOT/storage" \
+            "$API_ROOT/tmp/pids" \
+            "$API_HOME_DIR"
+
+        if [ ! -s "$API_ROOT/config/secret.key" ]; then
+            sha256sum </dev/null | cut -d' ' -f1 > "$API_ROOT/config/secret.key"
+        fi
+
+        if getent passwd www-data >/dev/null && getent group www-data >/dev/null; then
+            chown -R www-data:www-data \
+                "$API_ROOT/db/sphinx" \
+                "$API_ROOT/log" \
+                "$API_ROOT/storage" \
+                "$API_ROOT/tmp"
+
+            for path in \
+                "$API_ROOT" \
+                "$API_ROOT/config.ru" \
+                "$API_ROOT/public"; do
+                if [ -e "$path" ]; then
+                    chown www-data:www-data "$path"
+                fi
+            done
+
+            for path in \
+                "$API_ROOT/config/production.sphinx.conf" \
+                "$API_ROOT/db/data_schema.rb" \
+                "$API_ROOT/db/schema.rb"; do
+                if [ -e "$path" ]; then
+                    chown www-data:www-data "$path"
+                fi
+            done
+
+            for path in \
+                "$API_ROOT/config/database.yml" \
+                "$API_ROOT/config/database.yml.example" \
+                "$API_ROOT/config/secret.key"; do
+                if [ -e "$path" ]; then
+                    chgrp www-data "$path"
+                    chmod 0640 "$path"
+                fi
+            done
+        fi
+
+        touch "$API_ROOT/log/production.log"
+        ensure_ssl_cert
+        enable_obs_apache_site
+        ;;
+esac
+
+exit 0

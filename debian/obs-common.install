@@ -1,0 +1,4 @@
+debian/tmp/srv/obs srv/
+debian/tmp/etc/default/obs-server etc/default/
+debian/tmp/usr/lib/systemd/system/obsstoragesetup.service usr/lib/systemd/system/
+debian/tmp/usr/sbin/obsstoragesetup usr/sbin/

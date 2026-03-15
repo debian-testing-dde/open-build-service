@@ -1,0 +1,13 @@
+[Unit]
+Description=OBS API Setup
+Wants=obsstoragesetup.service mariadb.service obsrepserver.service obssrcserver.service obsscheduler.service obsdispatcher.service obspublisher.service
+Before=apache2.service
+After=network-online.target obsstoragesetup.service mariadb.service obsrepserver.service obssrcserver.service obsscheduler.service obsdispatcher.service obspublisher.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/obs/server/obs-debian-apisetup.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

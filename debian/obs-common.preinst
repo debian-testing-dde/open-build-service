@@ -1,0 +1,24 @@
+#!/bin/sh
+set -e
+
+OBS_DEFAULT=/etc/default/obs-server
+OBS_DEFAULT_BACKUP=/etc/default/obs-server.obs-common-preinst
+
+is_managed_conffile() {
+    dpkg-query -W -f='${Conffiles}\n' obs-common 2>/dev/null | awk '{print $1}' | grep -qx "$OBS_DEFAULT"
+}
+
+case "$1" in
+    install|upgrade)
+        if ! is_managed_conffile; then
+            if [ -d "$OBS_DEFAULT" ] && [ -f "$OBS_DEFAULT/sysconfig.obs-server" ]; then
+                mv "$OBS_DEFAULT/sysconfig.obs-server" "$OBS_DEFAULT_BACKUP"
+                rmdir "$OBS_DEFAULT" 2>/dev/null || true
+            elif [ -e "$OBS_DEFAULT" ] && [ ! -e "$OBS_DEFAULT_BACKUP" ]; then
+                mv "$OBS_DEFAULT" "$OBS_DEFAULT_BACKUP"
+            fi
+        fi
+        ;;
+esac
+
+exit 0
