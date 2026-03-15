@@ -1,11 +1,17 @@
-#! /bin/sh
+#! /bin/bash
 # Copyright (c) 2010-12, SUSE Inc.
 #
 # Author: adrian@suse.de
 #
 # /etc/init.d/obsstoragesetup
 
-source /etc/sysconfig/obs-server
+OBS_CONFIG_FILE=/etc/default/obs-server
+if [ -e "$OBS_CONFIG_FILE" ]; then
+  source "$OBS_CONFIG_FILE"
+elif [ -e /etc/sysconfig/obs-server ]; then
+  OBS_CONFIG_FILE=/etc/sysconfig/obs-server
+  source "$OBS_CONFIG_FILE"
+fi
 source /usr/lib/obs/server/functions.setup-appliance.sh
 
 # instance defaults
@@ -14,7 +20,7 @@ if [ -e /etc/buildhost.config ]; then
 fi
 
 if [ "$OBS_STORAGE_AUTOSETUP" != "yes" ]; then
-   echo "OBS Storage Autosetup is not enabled in sysconfig, skipping!"
+   echo "OBS Storage Autosetup is not enabled in ${OBS_CONFIG_FILE}, skipping!"
    exit 0
 fi
 

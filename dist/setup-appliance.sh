@@ -20,16 +20,19 @@ MYSQL_PASS=opensuse
 PID_FILE=/run/setup-appliance.pid
 
 # package or appliance defaults
-if [ -e /etc/sysconfig/obs-server ]; then
-  source /etc/sysconfig/obs-server
+OBS_CONFIG_FILE=/etc/default/obs-server
+if [ -e "$OBS_CONFIG_FILE" ]; then
+  source "$OBS_CONFIG_FILE"
+elif [ -e /etc/sysconfig/obs-server ]; then
+  OBS_CONFIG_FILE=/etc/sysconfig/obs-server
+  source "$OBS_CONFIG_FILE"
 fi
 
 # Set default directories
 apidir=/srv/www/obs/api
 backenddir=/srv/obs
 
-# Overwrite directory defaults with settings in
-# config file /etc/sysconfig/obs-server
+# Overwrite directory defaults with settings in the OBS config file
 if [ -n "$OBS_BASE_DIR" ]; then
   backenddir="$OBS_BASE_DIR"
 fi
@@ -65,7 +68,7 @@ while [[ $1 ]];do
 done
 
 if [ "$OBS_API_AUTOSETUP" != "yes" ]; then
-  echo "OBS API Autosetup is not enabled in sysconfig, skipping!"
+  echo "OBS API Autosetup is not enabled in ${OBS_CONFIG_FILE}, skipping!"
   exit 0
 fi
 

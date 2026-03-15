@@ -4,7 +4,8 @@ After=network-online.target obsstoragesetup.service
 
 [Service]
 OOMPolicy=continue
-EnvironmentFile=/etc/sysconfig/obs-server
+EnvironmentFile=-/etc/default/obs-server
+EnvironmentFile=-/etc/sysconfig/obs-server
 ExecStart=/usr/lib/obs/server/bs_repserver --logfile rep_server.log
 ExecStop=/usr/lib/obs/server/bs_repserver --stop
 ExecReload=/usr/lib/obs/server/bs_repserver --restart

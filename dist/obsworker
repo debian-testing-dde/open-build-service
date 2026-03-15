@@ -20,9 +20,14 @@ if test -e /etc/sysconfig/proxy; then
     export NO_PROXY
   fi
 fi
-if test -e /etc/sysconfig/obs-server; then
+OBS_CONFIG_FILE=/etc/default/obs-server
+if test -e "$OBS_CONFIG_FILE"; then
     # optional on workers
-    . /etc/sysconfig/obs-server
+    . "$OBS_CONFIG_FILE"
+elif test -e /etc/sysconfig/obs-server; then
+    OBS_CONFIG_FILE=/etc/sysconfig/obs-server
+    # compatibility fallback
+    . "$OBS_CONFIG_FILE"
 fi
 # This file may still exist from OBS 2.1 and before.
 if test -e /etc/sysconfig/obs-worker; then
@@ -199,12 +204,12 @@ fi
 
 if [ "$OBS_VM_TYPE" = "openstack" ]; then
     if [ -z "$OBS_WORKER_CONTROL_INSTANCE" ];then
-        echo "Please specify OBS_WORKER_CONTROL_INSTANCE in /etc/sysconfig/obs-server!"
+        echo "Please specify OBS_WORKER_CONTROL_INSTANCE in $OBS_CONFIG_FILE!"
         exit 1
     fi
 
     if [ -z "$OBS_WORKER_OS_FLAVOR" ];then
-        echo "Please specify OBS_WORKER_OS_FLAVOR in /etc/sysconfig/obs-server!"
+        echo "Please specify OBS_WORKER_OS_FLAVOR in $OBS_CONFIG_FILE!"
         exit 1
     fi
 
@@ -310,7 +315,7 @@ create_initrd()
     # 0150 is already included from the local guest
     ZVM_VOLUME_SWAP=${ZVM_VOLUME_SWAP:-0200}
     if test -z "$2" ; then
-        echo "Please define a name for the new initrd in /etc/sysconfig/obs-server"
+        echo "Please define a name for the new initrd in $OBS_CONFIG_FILE"
         return 1
     else
         # create initrd with system scripts

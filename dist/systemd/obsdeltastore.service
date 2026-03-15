@@ -3,7 +3,8 @@ Description=OBS deltastore daemon
 After=network-online.target obsstoragesetup.service
 
 [Service]
-EnvironmentFile=/etc/sysconfig/obs-server
+EnvironmentFile=-/etc/default/obs-server
+EnvironmentFile=-/etc/sysconfig/obs-server
 ExecStart=/usr/lib/obs/server/bs_deltastore --logfile deltastore.log
 ExecStop=/usr/lib/obs/server/bs_deltastore --stop
 ExecReload=/usr/lib/obs/server/bs_deltastore --restart

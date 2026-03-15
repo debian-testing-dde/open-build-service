@@ -3,7 +3,8 @@ Description=OBS redis forwarder
 After=network-online.target
 
 [Service]
-EnvironmentFile=/etc/sysconfig/obs-server
+EnvironmentFile=-/etc/default/obs-server
+EnvironmentFile=-/etc/sysconfig/obs-server
 ExecStart=/usr/lib/obs/server/bs_redis --logfile redis.log
 ExecStop=/usr/lib/obs/server/bs_redis --stop
 ExecReload=/usr/lib/obs/server/bs_redis --restart

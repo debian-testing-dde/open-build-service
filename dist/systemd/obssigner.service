@@ -4,7 +4,8 @@ After=network-online.target obsapisetup.service obsstoragesetup.service signd.se
 
 [Service]
 OOMPolicy=continue
-EnvironmentFile=/etc/sysconfig/obs-server
+EnvironmentFile=-/etc/default/obs-server
+EnvironmentFile=-/etc/sysconfig/obs-server
 ExecStart=/usr/lib/obs/server/bs_signer --logfile signer.log
 ExecStop=/usr/lib/obs/server/bs_signer --stop
 ExecReload=/usr/lib/obs/server/bs_signer --restart

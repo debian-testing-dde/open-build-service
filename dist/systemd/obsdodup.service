@@ -5,7 +5,8 @@ After=obsapisetup.service
 
 [Service]
 OOMPolicy=continue
-EnvironmentFile=/etc/sysconfig/obs-server
+EnvironmentFile=-/etc/default/obs-server
+EnvironmentFile=-/etc/sysconfig/obs-server
 ExecStart=/usr/lib/obs/server/bs_dodup --logfile dodup.log
 ExecStop=/usr/lib/obs/server/bs_dodup --stop
 ExecReload=/usr/lib/obs/server/bs_dodup --restart

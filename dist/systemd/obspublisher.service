@@ -4,7 +4,8 @@ After=network-online.target
 
 [Service]
 OOMPolicy=continue
-EnvironmentFile=/etc/sysconfig/obs-server
+EnvironmentFile=-/etc/default/obs-server
+EnvironmentFile=-/etc/sysconfig/obs-server
 ExecStart=/usr/lib/obs/server/bs_publish --logfile publisher.log
 ExecStop=/usr/lib/obs/server/bs_publish --stop
 ExecReload=/usr/lib/obs/server/bs_publish --restart

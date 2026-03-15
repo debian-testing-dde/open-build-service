@@ -3,7 +3,13 @@
 #
 # Author: adrian@suse.de
 
-. /etc/sysconfig/obs-server
+OBS_CONFIG_FILE=/etc/default/obs-server
+if test -e "$OBS_CONFIG_FILE"; then
+    . "$OBS_CONFIG_FILE"
+elif test -e /etc/sysconfig/obs-server; then
+    OBS_CONFIG_FILE=/etc/sysconfig/obs-server
+    . "$OBS_CONFIG_FILE"
+fi
 
 # Determine the base and follow a runlevel link name.
 base=${0##*/}
@@ -29,7 +35,7 @@ OBS_NEW_SCHEDULER_ARCHITECTURES=`$obsdir/bs_admin --show-scheduler-architectures
 
 if test -n "$OBS_NEW_SCHEDULER_ARCHITECTURES" ; then
 	if test -n "$OBS_SCHEDULER_ARCHITECTURES" ; then
-		echo "WARNING: ignoring old scheduler architectures configuration from /etc/sysconfig/obs-server"
+		echo "WARNING: ignoring old scheduler architectures configuration from $OBS_CONFIG_FILE"
 	fi
 	OBS_SCHEDULER_ARCHITECTURES="$OBS_NEW_SCHEDULER_ARCHITECTURES"
 fi
